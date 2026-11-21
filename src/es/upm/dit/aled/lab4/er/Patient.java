@@ -139,7 +139,15 @@ public class Patient extends Thread {
 	 * Area.
 	 */
 	private void attendedAtLocation() {
-		// TODO
+		try {
+			//Traza para depuración posterior
+			System.out.println("Patient " + number + " is being attended at " + location.getName());
+			// El paciente espera el tiempo (en ms) que indica su ubicación actual
+			Thread.sleep(location.getTime());
+		} catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+		
 	}
 
 	/**
