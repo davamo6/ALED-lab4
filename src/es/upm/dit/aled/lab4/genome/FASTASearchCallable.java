@@ -31,7 +31,10 @@ public class FASTASearchCallable implements Callable<List<Integer>> {
 	 * @param pattern The pattern to be found.
 	 */
 	public FASTASearchCallable(FASTAReaderThreads reader, int lo, int hi, byte[] pattern) {
-		// TODO
+		this.reader = reader;
+		this.lo = lo;
+		this.hi = hi;
+		this.pattern = pattern;
 	}
 
 	/**
@@ -44,8 +47,23 @@ public class FASTASearchCallable implements Callable<List<Integer>> {
 	 */
 	@Override
 	public List<Integer> call() throws Exception {
-		// TODO
-		return null;
+		// 1. Lista para almacenar las posiciones donde se encuentra el patrón en [lo, hi)
+		List<Integer> posiciones = new ArrayList<>();
+		// 2. Recorremos únicamente el segmento [lo, hi) asignado a esta tarea
+		for(int i = 0; i < hi; i++) {
+			try {
+				// Comprobamos si el patrón coincide empezando en la posición 'i'
+				if(compare(pattern, i)) {
+					posiciones.add(i);
+				}
+			} catch(FASTAException e) {
+				// Si estamos en el último segmento del genoma y el patrón sobrepasa validBytes,
+				// compare() lanza FASTAException: detenemos la búsqueda de esta tarea.
+				break;
+			}
+		}
+		// 3. Devolvemos todas las coincidencias halladas en este segmento
+		return posiciones;
 	}
 
 	/*

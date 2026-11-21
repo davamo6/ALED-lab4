@@ -7,7 +7,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -115,8 +115,36 @@ public class FASTAReaderThreads {
 	 *         pattern in the data.
 	 */
 	public List<Integer> search(byte[] pattern) {
-		// TODO
-		return null;
+		// 1. Obtenemos el número de procesadores y creamos el pool de hebras
+		int cores = Runtime.getRuntime().availableProcessors();
+		ExecutorService executor = Executors.newFixedThreadPool(cores);
+		// 2. List para guardar los Future devueltos por cada tarea
+		List<Future<List<Integer>>> futures = new ArrayList<>();
+		int chunkSize = validBytes / cores;
+		// 3. Creamos y lanzamos tantas tareas como núcleos tenga el equipo
+		for (int i = 0; i < cores; i++) {
+			int lo = i * chunkSize;
+			// La última tarea absorbe el resto de bytes si validBytes no es múltiplo exacto de cores
+			int hi = (i == cores - 1) ? validBytes : (i + 1) * chunkSize;
+
+			FASTASearchCallable task = new FASTASearchCallable(this, lo, hi, pattern);
+			futures.add(executor.submit(task));
+		}
+
+		// 4. Recogemos los resultados de cada Future y agregamos a la lista final
+		List<Integer> positions = new ArrayList<>();
+		try {
+			for (Future<List<Integer>> future : futures) {
+				positions.addAll(future.get());
+			}
+		} catch (InterruptedException | ExecutionException e) {
+			e.printStackTrace();
+		} finally {
+			// 5. Cerrar el ExecutorService siempre al terminar
+			executor.shutdown();
+		}
+
+		return positions;
 	}
 
 	public static void main(String[] args) {
