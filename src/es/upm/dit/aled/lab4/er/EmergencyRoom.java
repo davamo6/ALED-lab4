@@ -123,7 +123,8 @@ public class EmergencyRoom {
 	 * @param patient The Patient.
 	 */
 	public void admit(Patient patient) {
-		// TODO
+		// Arranca la ejecución concurrente del hilo del paciente
+		patient.start();
 	}
 
 	/**
@@ -132,7 +133,12 @@ public class EmergencyRoom {
 	 * @param patient The Patient.
 	 */
 	public void waitForDischarge(Patient patient) {
-		// TODO
+		try {
+			// Bloquea la ejecución actual hasta que la hebra del paciente termine su run()
+			patient.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

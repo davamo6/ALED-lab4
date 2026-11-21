@@ -130,7 +130,16 @@ public class Patient extends Thread {
 	 * movement is animated by the GUI and the index is increased by one.
 	 */
 	private void advanceProtocol() {
-		// TODO
+		// 1. Obtenemos el traslado correspondiente al paso actual del protocolo
+		Transfer transfer = protocol.get(indexProtocol);
+		// Traza opcional para depuración por consola
+		System.out.println("Patient " + number + " is moving from " + location.getName() + " to " + transfer.getTo().getName());
+		// 2. Pedimos a la GUI que anime el movimiento (este método ya incluye la espera)
+		EmergencyRoomGUI.getInstance().animateTransfer(this, transfer);
+		// 3. Actualizamos la ubicación actual del paciente al destino del traslado
+		this.location = transfer.getTo();
+		// 4. Avanzamos el índice del protocolo al siguiente paso
+		this.indexProtocol++;
 	}
 
 	/**
@@ -147,7 +156,6 @@ public class Patient extends Thread {
 		} catch(InterruptedException e) {
 			e.printStackTrace();
 		}
-		
 	}
 
 	/**
@@ -157,7 +165,20 @@ public class Patient extends Thread {
 	 */
 	@Override
 	public void run() {
-		// TODO
+		// 1. Mientras queden traslados pendientes en el protocolo usamos bucle while
+		while (indexProtocol < protocol.size()) {
+			// Paso 1: ser atendido en la ubicación actual
+			attendedAtLocation();
+			// Paso 2: avanzar al siguiente paso (anima el traslado, cambia ubicación e incrementa indexProtocol)
+			advanceProtocol();
+		}
+		// 2. Al salir del bucle hemos llegado a la última ubicación del protocolo:
+		// debemos ser atendidos en ella antes de irnos
+		attendedAtLocation();
+		// Traza opcional para verificar que el paciente finaliza
+		System.out.println("Patient " + number + " ha terminado su protocolo.");
+		// 3. Eliminar al paciente de la interfaz gráfica
+		EmergencyRoomGUI.getInstance().removePatient(this);
 	}
 
 }
